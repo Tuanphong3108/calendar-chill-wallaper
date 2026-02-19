@@ -1,4 +1,4 @@
--          Trước khi tiếp tục, bạn sẽ có thể cần đọc hết file này để biết cách cài đặt làm nền
+          Trước khi tiếp tục, bạn sẽ có thể cần đọc hết file này để biết cách cài đặt làm nền
 # ⛏ Minecraft At A Glance – Smart Weather Wallpaper
 
 Một **live wallpaper HTML duy nhất** phong cách **Minecraft + Pixel Weather + Material You**
