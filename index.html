@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minecraft At A Glance - Smart Weather & Facts</title>
+    <!-- Google Sans Flex & Material Symbols -->
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:wght@100..1000&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --md-sys-color-primary: #386a20; 
+            --md-sys-color-on-primary: #ffffff;
+            --md-sys-color-surface: #f7fbf1;
+            --md-sys-color-on-surface: #191d17;
+            --md-sys-color-outline: #72796f;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --md-sys-color-primary: #9cd67d;
+                --md-sys-color-on-primary: #0c3900;
+                --md-sys-color-surface: #11140e;
+                --md-sys-color-on-surface: #e1e4d9;
+            }
+        }
+
+        body {
+            font-family: 'Google Sans Flex', sans-serif;
+            margin: 0;
+            height: calc(100vh - 40px);
+            width: 100vw;
+            background-color: var(--md-sys-color-surface);
+            color: var(--md-sys-color-on-surface);
+            overflow: hidden;
+            user-select: none;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .hero-section {
+            height: 30vh; 
+            position: relative;
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start; 
+            padding: 30px 50px;
+            transition: background-image 1.5s ease-in-out;
+            flex-shrink: 0;
+        }
+
+        .hero-section::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(rgba(0,0,0,0.6) 0%, transparent 80%);
+            z-index: 1;
+        }
+
+        .at-a-glance {
+            position: relative;
+            z-index: 20;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            max-width: 60%;
+        }
+
+        #digital-clock {
+            position: absolute;
+            top: 30px;
+            right: 50px;
+            z-index: 20;
+            color: white;
+            font-size: 1.4rem;
+            font-weight: 800;
+            letter-spacing: 2px;
+            text-shadow: 0 4px 20px rgba(0,0,0,0.6);
+            font-variation-settings: "wght" 800;
+        }
+
+        .month-container {
+            position: absolute;
+            bottom: 45px;
+            left: 50px;
+            right: 50px;
+            z-index: 10;
+            display: flex;
+            justify-content: space-between;
+            pointer-events: none;
+        }
+
+        .month-char {
+            color: white;
+            font-size: clamp(2rem, 9vw, 10rem);
+            font-weight: 1000;
+            text-transform: uppercase;
+            line-height: 0.75;
+            text-shadow: 0 10px 40px rgba(0,0,0,0.4);
+            font-variation-settings: "wght" 1000, "wdth" 120;
+        }
+
+        .calendar-section {
+            flex-grow: 1;
+            background-color: var(--md-sys-color-surface);
+            border-radius: 64px 64px 0 0; 
+            margin-top: -55px; 
+            position: relative;
+            z-index: 30;
+            padding: 40px 100px 20px 100px; 
+            box-shadow: 0 -20px 60px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .day-cell {
+            aspect-ratio: 1 / 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            position: relative;
+            color: var(--md-sys-color-on-surface);
+        }
+
+        .today {
+            background-color: var(--md-sys-color-primary) !important;
+            color: var(--md-sys-color-on-primary) !important;
+            font-weight: 900;
+            border-radius: 50%; 
+            box-shadow: 0 0 20px var(--md-sys-color-primary), 0 4px 10px rgba(0, 0, 0, 0.1);
+            font-variation-settings: "wght" 900;
+            width: 54px; 
+            height: 54px;
+            margin: auto;
+            z-index: 2;
+        }
+
+        #year-label, .weekday-label {
+            color: var(--md-sys-color-primary);
+        }
+
+        .weather-pixel-icon {
+            width: 32px;
+            height: 32px;
+            object-fit: contain;
+            filter: drop-shadow(0 2px 6px rgba(0,0,0,0.3));
+        }
+
+        #weather-temp {
+            transition: color 0.5s ease;
+            /* Viền trắng mỏng hơn theo yêu cầu của bro Phong */
+            text-shadow: 
+                -0.5px -0.5px 0 rgba(255, 255, 255, 0.8),  
+                 0.5px -0.5px 0 rgba(255, 255, 255, 0.8),
+                -0.5px  0.5px 0 rgba(255, 255, 255, 0.8),
+                 0.5px  0.5px 0 rgba(255, 255, 255, 0.8),
+                 0 1px 4px rgba(0,0,0,0.2);
+        }
+
+        #loader {
+            position: fixed;
+            inset: 0;
+            background: var(--md-sys-color-surface);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+        .loading-gif {
+            width: 80px;
+            filter: grayscale(1) invert(0.2) opacity(0.6); 
+        }
+    </style>
+</head>
+<body>
+
+    <div id="loader">
+        <img src="https://tuanphong3108.github.io/md3-loading/Loading_Indicator.gif" class="loading-gif" alt="Loading...">
+    </div>
+
+    <div class="hero-section" id="hero-bg">
+        <div class="at-a-glance">
+            <div class="flex items-center gap-4 text-xl font-medium drop-shadow-lg">
+                <div class="flex items-center gap-2 flex-shrink-0">
+                    <img id="extreme-icon" class="weather-pixel-icon" src="" alt="Extreme Weather" style="display: none;">
+                    <img id="weather-pixel-icon" class="weather-pixel-icon" src="" alt="Weather Icon" style="display: none;">
+                    <span id="weather-temp" class="font-bold">--°C</span>
+                </div>
+                <div class="w-px h-6 bg-white opacity-30 flex-shrink-0"></div>
+                <span id="weather-desc" class="text-base font-normal tracking-wide leading-snug">Đang chuẩn bị TNT nổ nhà Open-Meteo API...</span>
+            </div>
+        </div>
+
+        <div id="digital-clock">--:--</div>
+        <div id="month-container" class="month-container"></div>
+    </div>
+
+    <div class="calendar-section">
+        <div id="year-label" class="text-4xl font-thin tracking-[25px] text-center opacity-20 mb-6">----</div>
+        <div class="grid grid-cols-7 text-center mb-4 font-black text-lg opacity-40">
+            <div class="weekday-label">M</div><div class="weekday-label">T</div><div class="weekday-label">W</div><div class="weekday-label">T</div><div class="weekday-label">F</div><div class="weekday-label">S</div><div class="weekday-label">S</div>
+        </div>
+        <div id="days-grid" class="grid grid-cols-7 gap-2 flex-1 items-center justify-items-center"></div>
+    </div>
+
+    <script>
+        const monthNames = ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"];
+        const minecraftImages = [
+            "https://cdn.pixabay.com/photo/2022/01/05/15/30/minecraft-6917341_1280.jpg",
+            "https://cdn.pixabay.com/photo/2022/01/08/10/28/minecraft-6923660_1280.jpg",
+            "https://cdn.pixabay.com/photo/2014/05/26/12/05/minecraft-354458_1280.png",
+            "https://cdn.pixabay.com/photo/2015/12/23/22/36/minecraft-1106253_1280.png",
+            "https://cdn.pixabay.com/photo/2016/10/16/23/20/minecraft-1746540_1280.jpg",
+            "https://cdn.pixabay.com/photo/2015/12/23/22/39/minecraft-1106261_1280.png",
+            "https://cdn.pixabay.com/photo/2014/11/13/15/24/minecraft-529462_1280.jpg",
+            "https://cdn.pixabay.com/photo/2015/12/23/22/39/minecraft-1106262_1280.png",
+            "https://cdn.pixabay.com/photo/2014/11/13/15/23/minecraft-529459_1280.jpg",
+            "https://cdn.pixabay.com/photo/2022/01/05/15/30/minecraft-6917341_1280.jpg",
+            "https://cdn.pixabay.com/photo/2022/01/08/10/28/minecraft-6923660_1280.jpg",
+            "https://cdn.pixabay.com/photo/2016/10/16/23/20/minecraft-1746540_1280.jpg"
+        ];
+
+        const weatherQuotes = {
+            clear: [
+                "Trời quang đãng, đi mine kim cương thôi!",
+                "Nắng đẹp thế này, đi tìm biome mới thôi.",
+                "Cày ruộng thôi, lúa chín tới nơi rồi!",
+                "Lên đường đi săn Enderman nào.",
+                "Đừng nhìn thẳng vào lũ da đen.",
+                "Hãy sử dụng đúng công cụ cho đúng việc!"
+            ],
+            cloudy: [
+                "Trời âm u quá, ở nhà craft thêm đuốc đi.",
+                "Mây mù che lối, coi chừng lạc đường khi đi mine.",
+                "Trang trí base chút không bro? Trời sắp xấu rồi.",
+                "Cần nhiên liệu cho đuốc? Hãy thử nung gỗ lấy than củi."
+            ],
+            rain: [
+                "Mưa rồi... Ở nhà craft đồ cho lành.",
+                "Thời điểm tốt để nấu quặng và phân loại rương.",
+                "Câu cá trong mưa? Nghe cũng chill đấy chứ.",
+                "Quái vật Endermen ghét giờ tắm!"
+            ],
+            storm: [
+                "SẤM SÉT! Cẩn thận Charged Creeper gõ cửa nhé.",
+                "Đội một quả bí ngô trên đầu sẽ giúp bạn tránh bị Enderman tấn công.",
+                "Lợn bị sét đánh sẽ trở thành Lợn Zombie!"
+            ],
+            hot: [
+                "Nóng vãi đạn! Chắc đang lạc vào Nether rồi.",
+                "Uống ngay chai nước đi bro, thanh Hunger đang tụt kìa.",
+                "Nắng này mà đi sa mạc thì chỉ có nước 'tăng xông'.",
+                "Đừng quên mang theo xô nước, hữu ích cả khi nóng lẫn khi ngã!"
+            ],
+            cold: [
+                "Lạnh teo bugi! Coi chừng bị đóng băng như Stray nhé.",
+                "Mặc thêm giáp vào cho ấm, biome này lạnh quá.",
+                "Đỉnh núi tuyết này không dành cho người yếu tim đâu.",
+                "Craft một cái lò nung để sưởi ấm tâm hồn đi nào."
+            ],
+            default: [
+                "Mèo rừng cho lũ Creeper biết ai mới là kẻ thống trị!",
+                "Bạn có biết có một Wiki Minecraft không?",
+                "Lợn zombie sẽ không tấn công bạn nếu bạn mặc giáp vàng.",
+                "Người cưỡi nhện là hình ảnh hiếm gặp của một con nhện được một bộ xương cưỡi!",
+                "Nếu bạn đặt độ khó trò chơi thành Hòa bình, máu của bạn sẽ tự động hồi phục!",
+                "Thu hoạch da bò và sử dụng nó để làm giáp và sách.",
+                "Bạn có mặt ở MINECON không?",
+                "Một số động vật sẽ đi theo bạn nếu bạn cầm lúa mì trên tay.",
+                "Rùa con sẽ rụng vảy khi lớn lên, hãy dùng chúng để chế tạo mai rùa.",
+                "Đá cuội có khả năng chống lại quả cầu lửa của Ghast.",
+                "Ngôn ngữ của Enderman thực chất là tiếng Anh viết ngược.",
+                "Đá obsidian được tạo ra khi nước chạm vào khối dung nham.",
+                "Người sắt sẽ chiến đấu cho bạn!",
+                "Nhạc cụ được chơi bởi một khối nốt nhạc phụ thuộc vào vật liệu bên dưới nó.",
+                "Nhạc của C418!",
+                "Một số người nổi tiếng chơi Minecraft!",
+                "MINECON 2015 được tổ chức tại London, Anh!",
+                "Bột xương có thể được dùng làm phân bón và giúp cây cối phát triển ngay lập tức!",
+                "Di chuyển đến các địa điểm nhanh hơn với xe đẩy và đường ray!",
+                "Quái vật Creeper được sinh ra từ một lỗi lập trình.",
+                "Zombie và Skeleton có thể sống sót qua ban ngày nếu chúng ở trong nước.",
+                "Xây dựng một cổng dịch chuyển sẽ cho phép bạn du hành đến thế giới Nether.",
+                "Sói và Người Sắt sẽ không tấn công Creeper.",
+                "Trồng một vài cây non và chúng sẽ lớn lên thành cây.",
+                "Không ai nhớ MINECON 2014 được tổ chức ở đâu.",
+                "Tên ban đầu của Minecraft là Cave Game.",
+                "Mojang có nhiều giải thưởng hơn cả nhân viên!",
+                "Đánh trả những quả cầu lửa vào Ghast!",
+                "Phiên bản đầu tiên của Minecraft được tạo ra chỉ trong 6 ngày!",
+                "Đặt hai rương cạnh nhau sẽ tạo thành một rương lớn.",
+                "Luôn cho rằng tin đồn là sai, thay vì cho rằng chúng là đúng!",
+                "Di chuyển một khối trong Nether tương đương với di chuyển tám khối ở thế giới ngoài.",
+                "Đào thẳng xuống hoặc thẳng lên không phải là một ý hay.",
+                "MINECON 2011 được tổ chức tại Las Vegas, Nevada, Hoa Kỳ!",
+                "Cho chó sói ăn xương để thuần hóa nó.",
+                "Một xô dung nham có thể nung chảy được 100 khối trong lò nung.",
+                "Lợn zombie sẽ không tấn công bạn nếu bạn mặc giáp vàng - trừ khi bạn tấn công chúng hoặc mở rương trong pháo đài.",
+                "Ngủ trên giường vào ban đêm sẽ tua nhanh trò chơi đến bình minh.",
+                "Tấn công một con sói sẽ khiến bất kỳ con sói nào ở gần đó trở nên hung dữ.",
+                "Nếu bạn có một cái xô rỗng, bạn có thể đổ đầy nước, dung nham hoặc sữa bò vào đó!",
+                "Ăn thức ăn nấu chín giúp giảm đói tốt hơn ăn thức ăn sống.",
+                "Quái vật Creeper sẽ phát nổ khi chúng đến gần bạn!",
+                "Bạn có thể nung chảy 20 vật phẩm trong lò nung bằng cách sử dụng một khối tảo bẹ khô làm nhiên liệu.",
+                "Cho chó sói ăn xương để thuần hóa nó. Sau đó, bạn có thể khiến nó ngồi hoặc đi theo bạn."
+            ]
+        };
+
+        const PIXEL_BASE_URL = 'https://tuanphong3108.github.io/weather/';
+        
+        const PIXEL_ICONS = {
+            '0': { day: 'clear_day.png', night: 'clear_night.png', type: 'clear' },
+            '1': { day: 'mostly_clear_day.png', night: 'mostly_clear_night.png', type: 'clear' },
+            '2': { day: 'sunny_with_cloudy.png', night: 'partly_cloudy_night.png', type: 'clear' },
+            '3': { day: 'mostly_cloudy_day.png', night: 'mostly_cloudy_night.png', type: 'cloudy' },
+            '45': { day: 'haze_fog_dust_smoke.png', night: 'haze_fog_dust_smoke.png', type: 'cloudy' },
+            '48': { day: 'haze_fog_dust_smoke.png', night: 'haze_fog_dust_smoke.png', type: 'cloudy' },
+            '51': { day: 'drizzle.png', night: 'drizzle.png', type: 'rain' },
+            '53': { day: 'drizzle.png', night: 'drizzle.png', type: 'rain' },
+            '55': { day: 'drizzle.png', night: 'drizzle.png', type: 'rain' },
+            '61': { day: 'showers_rain.png', night: 'showers_rain.png', type: 'rain' },
+            '63': { day: 'cloudy_with_rain.png', night: 'cloudy_with_rain.png', type: 'rain' },
+            '65': { day: 'heavy_rain.png', night: 'heavy_rain.png', type: 'rain' },
+            '71': { day: 'showers_snow.png', night: 'showers_snow.png', type: 'cold' },
+            '73': { day: 'cloudy_with_snow.png', night: 'cloudy_with_snow.png', type: 'cold' },
+            '75': { day: 'heavy_snow.png', night: 'heavy_snow.png', type: 'cold' },
+            '80': { day: 'scattered_showers_day.png', night: 'scattered_showers_night.png', type: 'rain' },
+            '81': { day: 'showers_rain.png', night: 'showers_rain.png', type: 'rain' },
+            '82': { day: 'heavy_rain.png', night: 'heavy_rain.png', type: 'rain' },
+            '95': { day: 'isolated_scattered_thunderstorms_day.png', night: 'isolated_scattered_thunderstorms_night.png', type: 'storm' },
+            '96': { day: 'strong_thunderstorms.png', night: 'strong_thunderstorms.png', type: 'storm' },
+            '99': { day: 'strong_thunderstorms.png', night: 'strong_thunderstorms.png', type: 'storm' }
+        };
+
+        const TARGET_LAT = <Vĩ độ>;
+        const TARGET_LON = <Kinh độ>;
+        let lastDay = -1;
+        let currentStatus = 'default';
+        let currentTimezone = 'Asia/Ho_Chi_Minh'; 
+
+        function refreshQuote() {
+            const useWeatherQuote = Math.random() < 0.3 && currentStatus !== 'default';
+            let source = weatherQuotes.default;
+            if (useWeatherQuote) {
+                source = weatherQuotes[currentStatus] || weatherQuotes.default;
+            }
+            const randomQuote = source[Math.floor(Math.random() * source.length)];
+            document.getElementById('weather-desc').innerText = randomQuote;
+        }
+
+        async function fetchWeather() {
+            try {
+                const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${TARGET_LAT}&longitude=${TARGET_LON}&current_weather=true&timezone=auto`);
+                const weatherData = await weatherRes.json();
+                
+                if (weatherData.timezone) currentTimezone = weatherData.timezone;
+
+                const current = weatherData.current_weather;
+                const temp = current.temperature;
+                const code = current.weathercode.toString();
+                const isDay = current.is_day === 1;
+                
+                const tempEl = document.getElementById('weather-temp');
+                tempEl.innerText = `${temp}°C`;
+
+                // --- LOGIC MÀU NHIỆT ĐỘ CỦA BRO PHONG ---
+               if (temp >= 35) {
+    tempEl.style.color = '#ff4d00'; // Nóng cực hạn
+} else if (temp >= 28) {
+    tempEl.style.color = '#ffcc00'; // Nóng
+} else if (temp >= 20) {
+    tempEl.style.color = '#ffffff'; // Dễ chịu
+} else if (temp > 5) {
+    tempEl.style.color = '#00ffff'; // Mát
+} else {
+    tempEl.style.color = '#0099ff'; // Lạnh sâu
+}
+
+                
+                const extremeIcon = document.getElementById('extreme-icon');
+                const weatherIcon = document.getElementById('weather-pixel-icon');
+
+                let isExtreme = false;
+                if (temp >= 35) {
+                    extremeIcon.src = PIXEL_BASE_URL + 'very_hot.png';
+                    extremeIcon.style.display = 'block';
+                    currentStatus = 'hot';
+                    isExtreme = true;
+                } else if (temp <= 5) {
+                    extremeIcon.src = PIXEL_BASE_URL + 'very_cold.png';
+                    extremeIcon.style.display = 'block';
+                    currentStatus = 'cold';
+                    isExtreme = true;
+                } else {
+                    extremeIcon.style.display = 'none';
+                }
+
+                const iconInfo = PIXEL_ICONS[code];
+                if (iconInfo) {
+                    weatherIcon.src = PIXEL_BASE_URL + (isDay ? iconInfo.day : iconInfo.night);
+                    weatherIcon.style.display = 'block';
+                    if (!isExtreme) currentStatus = iconInfo.type;
+                } else {
+                    weatherIcon.src = PIXEL_BASE_URL + 'icon.png';
+                    weatherIcon.style.display = 'block';
+                }
+                
+                refreshQuote();
+                updateClock(); 
+
+            } catch (err) {
+                console.error(err);
+                document.getElementById('weather-desc').innerText = "Vừa bị Charged Creeper nổ đường dây mạng, không thể liên lạc với Villager phụ trách Open-Meteo API!";
+            }
+        }
+
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('digital-clock').innerText = now.toLocaleTimeString('vi-VN', { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                timeZone: currentTimezone 
+            });
+            
+            const parts = new Intl.DateTimeFormat('en-US', {
+                timeZone: currentTimezone,
+                year: 'numeric',
+                month: 'numeric',
+                day: 'numeric'
+            }).formatToParts(now);
+
+            const dToday = parseInt(parts.find(p => p.type === 'day').value);
+            if (dToday !== lastDay) {
+                const y = parseInt(parts.find(p => p.type === 'year').value);
+                const m = parseInt(parts.find(p => p.type === 'month').value) - 1;
+                updateCalendar(dToday, m, y);
+            }
+        }
+
+        function updateCalendar(dToday, m, y) {
+            lastDay = dToday;
+            const container = document.getElementById('month-container');
+            container.innerHTML = '';
+            monthNames[m].split('').forEach(char => {
+                const span = document.createElement('span');
+                span.className = 'month-char';
+                span.innerText = char;
+                container.appendChild(span);
+            });
+
+            document.getElementById('hero-bg').style.backgroundImage = `url('${minecraftImages[m]}')`;
+            document.getElementById('year-label').innerText = y;
+
+            const firstDay = new Date(y, m, 1).getDay();
+            const startOffset = (firstDay === 0) ? 6 : firstDay - 1; 
+            const daysInMonth = new Date(y, m + 1, 0).getDate();
+            const grid = document.getElementById('days-grid');
+            grid.innerHTML = '';
+
+            for (let i = 0; i < startOffset; i++) grid.appendChild(Object.assign(document.createElement('div'), {className: 'day-cell opacity-0'}));
+
+            for (let d = 1; d <= daysInMonth; d++) {
+                const cell = document.createElement('div');
+                cell.className = 'day-cell';
+                cell.innerText = d;
+                if (d === dToday) cell.classList.add('today');
+                grid.appendChild(cell);
+            }
+        }
+
+        window.onload = () => {
+            updateClock();
+            fetchWeather();
+            setInterval(updateClock, 1000);
+            setInterval(refreshQuote, 30000);
+            setInterval(fetchWeather, 600000);
+            
+            setTimeout(() => {
+                const loader = document.getElementById('loader');
+                loader.style.opacity = '0';
+                setTimeout(() => loader.style.display = 'none', 1000);
+            }, 800);
+        };
+    </script>
+</body>
+</html>
