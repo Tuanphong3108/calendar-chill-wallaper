@@ -131,7 +131,7 @@ const TARGET_LON = <kinh độ>;
 
 ---
 
-## Bước 4: Bật giao diện tối (khuyến nghị)
+## Bước 4: Bật giao diện tự động (khuyến nghị)
 
 1. Nhấn **bánh răng** góc trên phải Lively.
 2. Vào **Chủ đề**.
